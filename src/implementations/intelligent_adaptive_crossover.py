@@ -39,5 +39,5 @@ def run_scales_problem_with_intelligent_adaptive_crossover(
     print('Current best fitness:', fitness_function(best_chromosome[0]))
     print('best chromosome', best_chromosome)
 
-    return result, log
+    return best_chromosome[0]
 

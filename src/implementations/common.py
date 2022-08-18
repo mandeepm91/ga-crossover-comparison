@@ -337,7 +337,6 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
             if min_fitness[0] == 0:
               break
 
-
     return population, logbook
 
 
@@ -354,5 +353,6 @@ def extract_operator_from_name(str_representation_of_function_name):
 def has_fitness_improved(last_5_iterations):
     oldest_generation = last_5_iterations[0]
     newest_generation = last_5_iterations[-1]
-    return (newest_generation['avg'] < oldest_generation['avg']) or \
-        (newest_generation['min'] < oldest_generation['min'])
+    # return (newest_generation['avg'] < oldest_generation['avg']) or \
+    #     (newest_generation['min'] < oldest_generation['min'])
+    return newest_generation['min'] < oldest_generation['min']

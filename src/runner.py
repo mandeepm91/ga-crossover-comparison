@@ -33,6 +33,20 @@ operator_number_to_name_map = {
     }
 }
 
+def display_weights(weights, best_chrosome):
+    left_weights = []
+    right_weights = []
+    index = 0
+    for bit in best_chromosome:
+        if bit == 0:
+            left_weights.append(weights[index])
+        elif bit == 1:
+            right_weights.append(weights[index])
+        index += 1
+    print('Left weights', left_weights, sum(left_weights))
+    print('Right weights', right_weights, sum(right_weights))
+
+
 if __name__ == "__main__":
     number_of_weights = input("Specify the number of weights: ")
     print("Select from one of the crossover operators below:")
@@ -45,5 +59,7 @@ if __name__ == "__main__":
     weights = get_first_n_primes(int(number_of_weights))
     fitness_function = get_fitness_function(weights)
     runner_function = operator_number_to_name_map[crossover_operator]['runner']
-    runner_function(weights, fitness_function)
+    best_chromosome = runner_function(weights, fitness_function)
+    display_weights(weights, best_chromosome)
+
 

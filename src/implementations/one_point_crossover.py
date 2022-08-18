@@ -36,4 +36,5 @@ def run_scales_problem_with_1_point_crossover(
     best_chromosome = tools.selBest(pop, k=1)
     print('Current best fitness:', fitness_function(best_chromosome[0]))
     print('best chromosome', best_chromosome)
+    return best_chromosome[0]
 
