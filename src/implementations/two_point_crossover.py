@@ -1,6 +1,6 @@
 from deap import tools
 import numpy
-from .common import initialize_toolbox, eaSimple2
+from .common import initialize_toolbox, eaSimple
 
 def run_scales_problem_with_2_point_crossover(
         weights = [],
@@ -24,7 +24,7 @@ def run_scales_problem_with_2_point_crossover(
     stats.register("min", numpy.min)
     stats.register("max", numpy.max)
 
-    result, log = eaSimple2(
+    result, log = eaSimple(
         pop, toolbox, cxpb=0.5, mutpb=0.2,
         ngen=max_number_of_generations,
         verbose=True,

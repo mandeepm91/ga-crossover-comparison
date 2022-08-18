@@ -3,6 +3,7 @@ from implementations.one_point_crossover import run_scales_problem_with_1_point_
 from implementations.two_point_crossover import run_scales_problem_with_2_point_crossover
 from implementations.uniform_crossover import run_scales_problem_with_uniform_crossover
 from implementations.adaptive_crossover_random import run_scales_problem_with_random_adaptive_crossover
+from implementations.intelligent_adaptive_crossover import run_scales_problem_with_intelligent_adaptive_crossover
 from deap import creator, base
 from implementations.common import get_fitness_function
 
@@ -25,6 +26,10 @@ operator_number_to_name_map = {
     '4': {
         'name': 'Random Adaptive Crossover',
         'runner': run_scales_problem_with_random_adaptive_crossover
+    },
+    '5': {
+        'name': 'Intelligent Adaptive Crossover',
+        'runner': run_scales_problem_with_intelligent_adaptive_crossover
     }
 }
 

@@ -1,7 +1,7 @@
 from deap import tools
 import numpy
 from random import choice
-from .common import initialize_toolbox, eaSimple2, eaSimpleRandomCrossover
+from .common import initialize_toolbox, eaSimple, eaSimpleRandomCrossover
 
 
 def run_scales_problem_with_random_adaptive_crossover(

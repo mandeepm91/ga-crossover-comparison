@@ -1,11 +1,10 @@
 from deap import tools
 import numpy
-from .common import initialize_toolbox, eaSimple
+from random import choice
+from .common import eaSimpleIntelligentCrossover, initialize_toolbox
 
-def crossover_operator(ind1, ind2):
-    return tools.cxUniform(ind1, ind2, indpb=0.1)
 
-def run_scales_problem_with_uniform_crossover(
+def run_scales_problem_with_intelligent_adaptive_crossover(
         weights = [],
         fitness_function = None,
         initial_population_size = 10,
@@ -16,7 +15,7 @@ def run_scales_problem_with_uniform_crossover(
     if not fitness_function:
         raise("FitnessFunctionNotDefined")
 
-    toolbox = initialize_toolbox(weights, fitness_function, crossover_operator)
+    toolbox = initialize_toolbox(weights, fitness_function)
 
     pop = toolbox.population(n=initial_population_size)
 
@@ -27,7 +26,7 @@ def run_scales_problem_with_uniform_crossover(
     stats.register("min", numpy.min)
     stats.register("max", numpy.max)
 
-    result, log = eaSimple(
+    result, log = eaSimpleIntelligentCrossover(
         pop, toolbox, cxpb=0.5, mutpb=0.2,
         ngen=max_number_of_generations,
         verbose=True,
@@ -39,4 +38,6 @@ def run_scales_problem_with_uniform_crossover(
     best_chromosome = tools.selBest(pop, k=1)
     print('Current best fitness:', fitness_function(best_chromosome[0]))
     print('best chromosome', best_chromosome)
+
+    return result, log
 
