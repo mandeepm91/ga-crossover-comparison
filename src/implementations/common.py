@@ -107,6 +107,7 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
     """
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+    total_fitness_function_calls = 0
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -144,14 +145,28 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
         # Replace the current population by the offspring
         population[:] = offspring
 
+        if gen % 100 == 0:
+            print('generations: ', gen)
+
+
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+        total_fitness_function_calls += len(invalid_ind)
+
         if verbose:
             print(logbook.stream)
-            min_fitness = toolbox.evaluate(halloffame[0])
-            if min_fitness[0] == 0:
-              break
+            print('total_fitness_function_calls', total_fitness_function_calls)
+
+        min_fitness = toolbox.evaluate(halloffame[0])
+        if min_fitness[0] == 0:
+            break
+
+
+        if max_evals:
+            if total_fitness_function_calls > max_evals:
+                print('max fitness function calls reached')
+                break
 
 
     return population, logbook
@@ -208,6 +223,7 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
     chromosome_length = len(population[0])
+    total_fitness_function_calls = 0
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -239,6 +255,9 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        if gen % 100 == 0:
+            print('generations: ', gen)
+
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
@@ -250,14 +269,25 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
         record = stats.compile(population) if stats else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         logbook[-1]['crossover_operator'] = str(toolbox.mate)
+
+        total_fitness_function_calls += len(invalid_ind)
+
         if verbose:
             # print(logbook[-1])
             print(logbook.stream)
+            print('total_fitness_function_calls', total_fitness_function_calls)
             # last_5_generations = logbook[-5:]
             # pprint(last_5_generations)
-            min_fitness = toolbox.evaluate(halloffame[0])
-            if min_fitness[0] == 0:
-              break
+
+        min_fitness = toolbox.evaluate(halloffame[0])
+        if min_fitness[0] == 0:
+            break
+
+        if max_evals:
+            if total_fitness_function_calls > max_evals:
+                print('max fitness function calls reached')
+                break
+
 
     return population, logbook
 
@@ -289,6 +319,7 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
     chromosome_length = len(population[0])
+    total_fitness_function_calls = 0
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -330,15 +361,29 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
         # Replace the current population by the offspring
         population[:] = offspring
 
+        if gen % 100 == 0:
+            print('generations: ', gen)
+
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         logbook[-1]['crossover_operator'] = str(toolbox.mate)
+        total_fitness_function_calls += len(invalid_ind)
+
         if verbose:
             print(logbook.stream)
-            min_fitness = toolbox.evaluate(halloffame[0])
-            if min_fitness[0] == 0:
-              break
+            print('total_fitness_function_calls', total_fitness_function_calls)
+
+        min_fitness = toolbox.evaluate(halloffame[0])
+        if min_fitness[0] == 0:
+            break
+
+
+        if max_evals:
+            if total_fitness_function_calls > max_evals:
+                print('max fitness function calls reached')
+                break
+
 
     return population, logbook
 

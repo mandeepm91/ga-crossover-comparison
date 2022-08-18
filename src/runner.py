@@ -57,9 +57,15 @@ if __name__ == "__main__":
     print("weights: {}".format(number_of_weights))
     print("operator: {}".format(operator_number_to_name_map[crossover_operator]['name']))
     weights = get_first_n_primes(int(number_of_weights))
+    max_fitness_function_calls = 50 * len(weights)
     fitness_function = get_fitness_function(weights)
+
     runner_function = operator_number_to_name_map[crossover_operator]['runner']
-    best_chromosome = runner_function(weights, fitness_function)
+    best_chromosome = runner_function(
+        weights,
+        fitness_function,
+        max_fitness_function_calls=max_fitness_function_calls
+    )
     display_weights(weights, best_chromosome)
 
 

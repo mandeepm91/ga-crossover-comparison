@@ -1,14 +1,14 @@
 from deap import tools
 import numpy
 from .common import initialize_toolbox, eaSimple
-from .constants import POPULATION_SIZE, MAX_GENERATIONS, CROSSOVER_PROBABILITY
+from .constants import POPULATION_SIZE, MAX_GENERATIONS, CROSSOVER_PROBABILITY, VERBOSE
 
 def run_scales_problem_with_2_point_crossover(
         weights = [],
         fitness_function = None,
         initial_population_size = POPULATION_SIZE,
         max_number_of_generations = MAX_GENERATIONS,
-        max_fitness_function_calls = 1000
+        max_fitness_function_calls = None
     ):
 
     if not fitness_function:
@@ -31,7 +31,7 @@ def run_scales_problem_with_2_point_crossover(
     result, log = eaSimple(
         pop, toolbox, cxpb=CROSSOVER_PROBABILITY, mutpb=mutation_rate,
         ngen=max_number_of_generations,
-        verbose=True,
+        verbose=VERBOSE,
         stats=stats,
         halloffame=hof,
         max_evals=max_fitness_function_calls
@@ -40,5 +40,5 @@ def run_scales_problem_with_2_point_crossover(
     best_chromosome = tools.selBest(pop, k=1)
     print('Current best fitness:', fitness_function(best_chromosome[0]))
     print('best chromosome', best_chromosome)
-    return best_chromosome[0]
+    return best_chromosome[0], log
 
