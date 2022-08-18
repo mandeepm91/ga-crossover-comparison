@@ -1,14 +1,16 @@
+from pickle import POP
 from deap import tools
 import numpy
 from random import choice
 from .common import eaSimpleIntelligentCrossover, initialize_toolbox
+from .constants import POPULATION_SIZE, MAX_GENERATIONS, CROSSOVER_PROBABILITY
 
 
 def run_scales_problem_with_intelligent_adaptive_crossover(
         weights = [],
         fitness_function = None,
-        initial_population_size = 10,
-        max_number_of_generations = 1000,
+        initial_population_size = POPULATION_SIZE,
+        max_number_of_generations = MAX_GENERATIONS,
         max_fitness_function_calls = 1000
     ):
 
@@ -26,8 +28,11 @@ def run_scales_problem_with_intelligent_adaptive_crossover(
     stats.register("min", numpy.min)
     stats.register("max", numpy.max)
 
+    size_of_chromosome = len(weights)
+    mutation_rate = 1.0/size_of_chromosome
+
     result, log = eaSimpleIntelligentCrossover(
-        pop, toolbox, cxpb=0.5, mutpb=0.2,
+        pop, toolbox, cxpb=CROSSOVER_PROBABILITY, mutpb=mutation_rate,
         ngen=max_number_of_generations,
         verbose=True,
         stats=stats,

@@ -192,12 +192,12 @@ def get_fitness_function(NUMBERS):
     return evalFitness
 
 
-def register_random_crossover_operator(toolbox):
+def register_random_crossover_operator(toolbox, chromosome_length):
     operators = [tools.cxOnePoint, tools.cxTwoPoint, tools.cxUniform]
     randomly_chosen_operator = random.choice(operators)
     # print(randomly_chosen_operator)
     if (operators.index(randomly_chosen_operator) == 2):
-        toolbox.register("mate", randomly_chosen_operator, indpb=0.1)
+        toolbox.register("mate", randomly_chosen_operator, indpb=1.0/chromosome_length)
     else:
         toolbox.register("mate", randomly_chosen_operator)
 
@@ -206,6 +206,8 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
              halloffame=None, verbose=__debug__, max_evals=None):
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+
+    chromosome_length = len(population[0])
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -227,7 +229,7 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
         # Select the next generation individuals
         offspring = toolbox.select(population, len(population))
 
-        register_random_crossover_operator(toolbox)
+        register_random_crossover_operator(toolbox, chromosome_length)
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb, logbook)
 
@@ -257,12 +259,11 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
             if min_fitness[0] == 0:
               break
 
-
     return population, logbook
 
 
 
-def register_crossover_operator_intelligently(toolbox, last_5_iterations):
+def register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length):
     operator_used_in_last_iteration = extract_operator_from_name(last_5_iterations[-1]['crossover_operator'])
     operators = [tools.cxOnePoint, tools.cxTwoPoint, tools.cxUniform]
     # if fitness has improved over last 5 iterations
@@ -270,14 +271,14 @@ def register_crossover_operator_intelligently(toolbox, last_5_iterations):
     # else, choose a random operator
     if has_fitness_improved(last_5_iterations):
         if (operators.index(operator_used_in_last_iteration) == 2):
-            toolbox.register("mate", operator_used_in_last_iteration, indpb=0.1)
+            toolbox.register("mate", operator_used_in_last_iteration, indpb=1.0/chromosome_length)
         else:
             toolbox.register("mate", operator_used_in_last_iteration)
     else:
         randomly_chosen_operator = random.choice(operators)
         # print(randomly_chosen_operator)
         if (operators.index(randomly_chosen_operator) == 2):
-            toolbox.register("mate", randomly_chosen_operator, indpb=0.1)
+            toolbox.register("mate", randomly_chosen_operator, indpb=1.0/chromosome_length)
         else:
             toolbox.register("mate", randomly_chosen_operator)
 
@@ -286,6 +287,8 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
              halloffame=None, verbose=__debug__, max_evals=None):
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+
+    chromosome_length = len(population[0])
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -309,7 +312,7 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
         offspring = toolbox.select(population, len(population))
 
         last_5_iterations = logbook[-5:]
-        register_crossover_operator_intelligently(toolbox, last_5_iterations)
+        register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length)
         # print(str(toolbox.mate))
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb, logbook)
