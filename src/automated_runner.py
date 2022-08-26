@@ -35,7 +35,7 @@ operator_number_to_name_map = {
     }
 }
 
-def display_weights(weights, best_chrosome):
+def display_weights(weights, best_chromosome):
     left_weights = []
     right_weights = []
     index = 0
@@ -61,7 +61,7 @@ if __name__ == "__main__":
                 start_time = int(round(time.time() * 1000))
                 weights = get_first_n_primes(int(number_of_weights))
                 fitness_function = get_fitness_function(weights)
-                max_fitness_function_calls = 50 * len(weights)
+                max_fitness_function_calls = 200 * len(weights)
 
                 runner_function = operator_number_to_name_map[operator_number]['runner']
 
@@ -93,6 +93,7 @@ if __name__ == "__main__":
                         operator_name=operator_details['name'],
                         number_of_weights=int(number_of_weights),
                         iteration_number=iteration_number,
+                        max_fitness_function_calls=max_fitness_function_calls,
                         time_in_milliseconds=time_in_milliseconds,
                         logbook=logbook,
                         best_chromosome=best_chromosome,

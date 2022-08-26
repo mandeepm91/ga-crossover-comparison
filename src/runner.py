@@ -33,7 +33,7 @@ operator_number_to_name_map = {
     }
 }
 
-def display_weights(weights, best_chrosome):
+def display_weights(weights, best_chromosome):
     left_weights = []
     right_weights = []
     index = 0
@@ -57,6 +57,7 @@ if __name__ == "__main__":
     print("weights: {}".format(number_of_weights))
     print("operator: {}".format(operator_number_to_name_map[crossover_operator]['name']))
     weights = get_first_n_primes(int(number_of_weights))
+    print("weights", weights)
     max_fitness_function_calls = 50 * len(weights)
     fitness_function = get_fitness_function(weights)
 

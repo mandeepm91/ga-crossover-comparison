@@ -54,7 +54,7 @@ def varAnd(population, toolbox, cxpb, mutpb, logbook):
 
 
 def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, max_evals=None):
+             halloffame=None, verbose=__debug__, max_evals=None, maximization_problem=None):
     """This algorithm reproduce the simplest evolutionary algorithm as
     presented in chapter 7 of [Back2000]_.
     :param population: A list of individuals.
@@ -108,6 +108,7 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
     total_fitness_function_calls = 0
+    chromosome_length = len(population[0])
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -158,9 +159,14 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
             print(logbook.stream)
             print('total_fitness_function_calls', total_fitness_function_calls)
 
-        min_fitness = toolbox.evaluate(halloffame[0])
-        if min_fitness[0] == 0:
-            break
+
+        best_fitness = toolbox.evaluate(halloffame[0])
+        if maximization_problem:
+            if int(best_fitness[0]) == int(chromosome_length):
+                break
+        else:
+            if best_fitness[0] == 0:
+                break
 
 
         if max_evals:
@@ -170,6 +176,26 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, stats=None,
 
 
     return population, logbook
+
+def initialize_toolbox_one_max(problem_size, fitness_function, crossover_operator=None):
+    print('initializing toolbox')
+    toolbox = base.Toolbox()
+
+    # chromosomes can be a string of 0 and 1 only
+    toolbox.register("attr_bool", random.randint, 0, 1)
+    # length of a chromosome is equal to the length of NUMBERS list
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, n=problem_size)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+    toolbox.register("evaluate", fitness_function)
+
+    if crossover_operator:
+        toolbox.register("mate", crossover_operator)
+
+    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+    return toolbox
+
 
 def initialize_toolbox(NUMBERS, fitness_function, crossover_operator=None):
 
@@ -190,6 +216,7 @@ def initialize_toolbox(NUMBERS, fitness_function, crossover_operator=None):
     toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=3)
     return toolbox
+
 
 def get_fitness_function(NUMBERS):
     def evalFitness(individual):
