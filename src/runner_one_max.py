@@ -51,7 +51,7 @@ if __name__ == "__main__":
     print("Inputs:")
     print("problem_size: {}".format(problem_size))
     print("operator: {}".format(operator_number_to_name_map[crossover_operator]['name']))
-    max_fitness_function_calls = 1000 * problem_size
+    max_fitness_function_calls = 200 * problem_size
     fitness_function = evalFitness
 
     runner_function = operator_number_to_name_map[crossover_operator]['runner']

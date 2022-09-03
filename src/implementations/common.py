@@ -245,7 +245,7 @@ def register_random_crossover_operator(toolbox, chromosome_length):
 
 
 def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, max_evals=None):
+             halloffame=None, verbose=__debug__, max_evals=None, maximization_problem=None):
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -273,6 +273,7 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
         offspring = toolbox.select(population, len(population))
 
         register_random_crossover_operator(toolbox, chromosome_length)
+
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb, logbook)
 
@@ -282,15 +283,15 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        if gen % 100 == 0:
-            print('generations: ', gen)
-
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(offspring)
 
         # Replace the current population by the offspring
         population[:] = offspring
+
+        if gen % 100 == 0:
+            print('generations: ', gen)
 
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
@@ -306,27 +307,30 @@ def eaSimpleRandomCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
             # last_5_generations = logbook[-5:]
             # pprint(last_5_generations)
 
-        min_fitness = toolbox.evaluate(halloffame[0])
-        if min_fitness[0] == 0:
-            break
+        best_fitness = toolbox.evaluate(halloffame[0])
+        if maximization_problem:
+            if int(best_fitness[0]) == int(chromosome_length):
+                break
+        else:
+            if best_fitness[0] == 0:
+                break
 
         if max_evals:
             if total_fitness_function_calls > max_evals:
                 print('max fitness function calls reached')
                 break
 
-
     return population, logbook
 
 
 
-def register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length):
+def register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length, maximization_problem):
     operator_used_in_last_iteration = extract_operator_from_name(last_5_iterations[-1]['crossover_operator'])
     operators = [tools.cxOnePoint, tools.cxTwoPoint, tools.cxUniform]
     # if fitness has improved over last 5 iterations
     # continue to use the same operator
     # else, choose a random operator
-    if has_fitness_improved(last_5_iterations):
+    if has_fitness_improved(last_5_iterations, maximization_problem):
         if (operators.index(operator_used_in_last_iteration) == 2):
             toolbox.register("mate", operator_used_in_last_iteration, indpb=1.0/chromosome_length)
         else:
@@ -341,7 +345,7 @@ def register_crossover_operator_intelligently(toolbox, last_5_iterations, chromo
 
 
 def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=None,
-             halloffame=None, verbose=__debug__, max_evals=None):
+             halloffame=None, verbose=__debug__, max_evals=None, maximization_problem=None):
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
@@ -370,7 +374,8 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
         offspring = toolbox.select(population, len(population))
 
         last_5_iterations = logbook[-5:]
-        register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length)
+
+        register_crossover_operator_intelligently(toolbox, last_5_iterations, chromosome_length, maximization_problem)
         # print(str(toolbox.mate))
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb, logbook)
@@ -401,16 +406,18 @@ def eaSimpleIntelligentCrossover(population, toolbox, cxpb, mutpb, ngen, stats=N
             print(logbook.stream)
             print('total_fitness_function_calls', total_fitness_function_calls)
 
-        min_fitness = toolbox.evaluate(halloffame[0])
-        if min_fitness[0] == 0:
-            break
-
+        best_fitness = toolbox.evaluate(halloffame[0])
+        if maximization_problem:
+            if int(best_fitness[0]) == int(chromosome_length):
+                break
+        else:
+            if best_fitness[0] == 0:
+                break
 
         if max_evals:
             if total_fitness_function_calls > max_evals:
                 print('max fitness function calls reached')
                 break
-
 
     return population, logbook
 
@@ -425,9 +432,10 @@ def extract_operator_from_name(str_representation_of_function_name):
 
 
 
-def has_fitness_improved(last_5_iterations):
+def has_fitness_improved(last_5_iterations, maximization_problem):
     oldest_generation = last_5_iterations[0]
     newest_generation = last_5_iterations[-1]
-    # return (newest_generation['avg'] < oldest_generation['avg']) or \
-    #     (newest_generation['min'] < oldest_generation['min'])
-    return newest_generation['min'] < oldest_generation['min']
+    if maximization_problem:
+        return newest_generation['max'] > oldest_generation['max']
+    else:
+        return newest_generation['min'] < oldest_generation['min']

@@ -1,4 +1,3 @@
-from sys import stderr
 import psycopg
 import json
 import csv
@@ -167,19 +166,24 @@ def get_denormalized_results():
 def flatten(l):
     return [item for sublist in l for item in sublist]
 
-def get_aggregates_v2():
+def get_aggregates_v2(table_name="execution_logs_scales"):
+    field_name = "number_of_weights"
+    if table_name == "execution_logs_scales":
+        field_name = "number_of_weights"
+    else:
+        field_name = "problem_size"
     with psycopg.connect(
         "host=0.0.0.0 dbname=ga_crossover_comparison user=postgres password=postgres",
         row_factory=dict_row
     ) as conn:
 
-        with open('aggregates_v2.csv', 'w', newline='') as output_file:
+        with open('aggregates_v2_{}.csv'.format(table_name), 'w', newline='') as output_file:
 
         # Open a cursor to perform database operations
             with conn.cursor() as cur:
                 keys = [
                     'operator_name',
-                    'number_of_weights',
+                    field_name,
                     'avg_time',
                     'avg_best_fitness',
                     'avg',
@@ -193,14 +197,14 @@ def get_aggregates_v2():
                 dict_writer.writeheader()
                 # Execute a command: this creates a new table
                 cur.execute("""
-                    select number_of_weights
+                    select {}
                         , operator_name
                         , json_agg(logbook) as logbooks
                         , avg(time_in_milliseconds) as avg_time
                         , avg(best_chromosome_fitness) as avg_best_fitness
-                    from execution_logs_scales
+                    from {}
                     group by 1,2
-                """)
+                """.format(field_name, table_name))
                 count = 0
                 for record in cur:
                     flattened_logbook_entries = flatten(record.get('logbooks'))
@@ -221,7 +225,7 @@ def get_aggregates_v2():
                     for log_entry in logbook_of_averages:
                         denormalized_row = {
                             'operator_name': record['operator_name'],
-                            'number_of_weights': record['number_of_weights'],
+                            field_name: record[field_name],
                             'avg_time': record['avg_time'],
                             'avg_best_fitness': record['avg_best_fitness'],
                             'avg': log_entry['avg'],
@@ -237,4 +241,75 @@ def get_aggregates_v2():
                             print(count)
 
 
-get_aggregates_v2()
+def get_stats_till_best_fitness(logbook, best_fitness):
+    gen = 0
+    nevals = 0
+    for entry in logbook:
+        gen = entry['gen']
+        nevals += entry['nevals']
+        if entry['min'] == best_fitness:
+            break
+    return gen, nevals
+
+def get_average_for_metric(list_of_objects, metric_name):
+    number_of_observations = len(list_of_objects)
+    sum_of_observations = sum([entry[metric_name] for entry in list_of_objects])
+    return (sum_of_observations * 1.0)/number_of_observations
+
+def get_evals_till_best_fitness(table_name="execution_logs_scales"):
+    results = {}
+    # Connect to an existing database
+    with psycopg.connect(
+        "host=0.0.0.0 dbname=ga_crossover_comparison user=postgres password=postgres",
+        row_factory=dict_row
+    ) as conn:
+
+        # Open a cursor to perform database operations
+        with conn.cursor() as cur:
+
+            # Execute a command: this creates a new table
+            cur.execute("""
+                select *
+                from {}
+                where number_of_weights <= 1000
+            """.format(table_name))
+
+            for record in cur:
+                operator_name = record['operator_name']
+                if operator_name not in results:
+                    results[operator_name] = {}
+                number_of_weights = record['number_of_weights']
+                if number_of_weights not in results[operator_name]:
+                    results[operator_name][number_of_weights] = []
+                generation_till_best_fitness, nevals_till_best_fitness = get_stats_till_best_fitness(record['logbook'], record['best_chromosome_fitness'])
+                stats = {
+                    'generation_till_best_fitness': generation_till_best_fitness,
+                    'nevals_till_best_fitness': nevals_till_best_fitness,
+                    'best_fitness': record['best_chromosome_fitness']
+                }
+                results[operator_name][number_of_weights].append(stats)
+
+    with open('evals_till_best_fitness_{}.csv'.format(table_name), 'w', newline='') as output_file:
+        keys = [
+            'operator_name',
+            'number_of_weights',
+            'avg_generations_till_best_fitness',
+            'avg_nevals_till_best_fitness'
+        ]
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        for operator_name, stats in results.items():
+            for number_of_weights, list_of_entries in stats.items():
+                avg_generations_till_best_fitness = get_average_for_metric(list_of_entries, 'generation_till_best_fitness')
+                avg_nevals_till_best_fitness = get_average_for_metric(list_of_entries, 'nevals_till_best_fitness')
+                row = {
+                    'operator_name': operator_name,
+                    'number_of_weights': number_of_weights,
+                    'avg_generations_till_best_fitness': avg_generations_till_best_fitness,
+                    'avg_nevals_till_best_fitness': avg_nevals_till_best_fitness
+                }
+                dict_writer.writerow(row)
+
+# get_evals_till_best_fitness()
+get_aggregates_v2(table_name="execution_logs_one_max")
+# get_evals_till_best_fitness(table_name="execution_logs_one_max")
