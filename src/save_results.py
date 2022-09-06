@@ -257,6 +257,12 @@ def get_average_for_metric(list_of_objects, metric_name):
     return (sum_of_observations * 1.0)/number_of_observations
 
 def get_evals_till_best_fitness(table_name="execution_logs_scales"):
+    field_name = "number_of_weights"
+    if table_name == "execution_logs_scales":
+        field_name = "number_of_weights"
+    else:
+        field_name = "problem_size"
+
     results = {}
     # Connect to an existing database
     with psycopg.connect(
@@ -271,45 +277,45 @@ def get_evals_till_best_fitness(table_name="execution_logs_scales"):
             cur.execute("""
                 select *
                 from {}
-                where number_of_weights <= 1000
-            """.format(table_name))
+                where {} <= 1000
+            """.format(table_name, field_name))
 
             for record in cur:
                 operator_name = record['operator_name']
                 if operator_name not in results:
                     results[operator_name] = {}
-                number_of_weights = record['number_of_weights']
-                if number_of_weights not in results[operator_name]:
-                    results[operator_name][number_of_weights] = []
+                problem_size = record[field_name]
+                if problem_size not in results[operator_name]:
+                    results[operator_name][problem_size] = []
                 generation_till_best_fitness, nevals_till_best_fitness = get_stats_till_best_fitness(record['logbook'], record['best_chromosome_fitness'])
                 stats = {
                     'generation_till_best_fitness': generation_till_best_fitness,
                     'nevals_till_best_fitness': nevals_till_best_fitness,
                     'best_fitness': record['best_chromosome_fitness']
                 }
-                results[operator_name][number_of_weights].append(stats)
+                results[operator_name][problem_size].append(stats)
 
     with open('evals_till_best_fitness_{}.csv'.format(table_name), 'w', newline='') as output_file:
         keys = [
             'operator_name',
-            'number_of_weights',
+            field_name,
             'avg_generations_till_best_fitness',
             'avg_nevals_till_best_fitness'
         ]
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         for operator_name, stats in results.items():
-            for number_of_weights, list_of_entries in stats.items():
+            for problem_size, list_of_entries in stats.items():
                 avg_generations_till_best_fitness = get_average_for_metric(list_of_entries, 'generation_till_best_fitness')
                 avg_nevals_till_best_fitness = get_average_for_metric(list_of_entries, 'nevals_till_best_fitness')
                 row = {
                     'operator_name': operator_name,
-                    'number_of_weights': number_of_weights,
+                    field_name: problem_size,
                     'avg_generations_till_best_fitness': avg_generations_till_best_fitness,
                     'avg_nevals_till_best_fitness': avg_nevals_till_best_fitness
                 }
                 dict_writer.writerow(row)
 
 # get_evals_till_best_fitness()
-get_aggregates_v2(table_name="execution_logs_one_max")
-# get_evals_till_best_fitness(table_name="execution_logs_one_max")
+# get_aggregates_v2(table_name="execution_logs_one_max")
+get_evals_till_best_fitness(table_name="execution_logs_one_max")
